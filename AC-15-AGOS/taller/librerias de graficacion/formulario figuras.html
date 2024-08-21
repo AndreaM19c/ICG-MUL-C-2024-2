@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Figuras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, 
+        .form-group select, 
+        .form-group button {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .form-group .button-group button {
+            width: auto;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group .button-group button:hover {
+            background-color: #0056b3;
+        }
+        .button-group button.active {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        #canvasContainer {
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="figureForm">
+            <div class="form-group">
+                <label for="figure">Figura:</label>
+                <select id="figure" name="figure" required>
+                    <option value="">Selecciona una figura</option>
+                    <option value="cuadrado">Cuadrado</option>
+                    <option value="triangulo">Triángulo</option>
+                    <option value="rectangulo">Rectángulo</option>
+                    <option value="circulo">Círculo</option>
+                    <option value="linea_recta">Líneas Rectas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Coordenadas:</label>
+                <div class="button-group">
+                    <button type="button" id="polarBtn">Polares</button>
+                    <button type="button" id="cartesianBtn">Cartesianas</button>
+                </div>
+                <input type="hidden" id="coordinateSystem" name="coordinateSystem">
+            </div>
+
+            <div id="circleFields" class="form-group hidden">
+                <label for="radius">Radio del Círculo:</label>
+                <input type="number" id="radius" name="radius" step="0.1">
+            </div>
+
+            <div id="triangleFields" class="form-group hidden">
+                <label for="triangleType">Tipo de Triángulo:</label>
+                <select id="triangleType" name="triangleType">
+                    <option value="">Selecciona un tipo</option>
+                    <option value="equilatero">Equilátero</option>
+                    <option value="isosceles">Isósceles</option>
+                    <option value="escaleno">Escaleno</option>
+                </select>
+            </div>
+
+            <div id="squareRectFields" class="form-group hidden">
+                <label for="sideLength">Medida de los Lados:</label>
+                <input type="number" id="sideLength" name="sideLength" step="0.1">
+                <label for="unit">Unidad:</label>
+                <select id="unit" name="unit">
+                    <option value="cm">Centímetros</option>
+                    <option value="mm">Milímetros</option>
+                </select>
+            </div>
+
+            <div id="lineFields" class="form-group hidden">
+                <label for="coordinates">Coordenadas (x1, y1, x2, y2):</label>
+                <input type="text" id="coordinates" name="coordinates" placeholder="Ejemplo: 0,0,100,100">
+            </div>
+
+            <div class="form-group button-group">
+                <button type="button" id="drawButton">Dibujar</button>
+                <button type="button" id="cancelButton">Cancelar</button>
+                <button type="button" id="exitButton">Salir</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="canvasContainer">
+        <canvas id="drawingCanvas" width="500" height="500"></canvas>
+    </div>
+
+    <script>
+        const figureSelect = document.getElementById('figure');
+        const polarBtn = document.getElementById('polarBtn');
+        const cartesianBtn = document.getElementById('cartesianBtn');
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const unitSelect = document.getElementById('unit');
+
+        function hideAllFields() {
+            document.getElementById('circleFields').classList.add('hidden');
+            document.getElementById('triangleFields').classList.add('hidden');
+            document.getElementById('squareRectFields').classList.add('hidden');
+            document.getElementById('lineFields').classList.add('hidden');
+        }
+
+        figureSelect.addEventListener('change', function() {
+            hideAllFields();
+            const figure = this.value;
+            if (figure === 'circulo') {
+                document.getElementById('circleFields').classList.remove('hidden');
+            } else if (figure === 'triangulo') {
+                document.getElementById('triangleFields').classList.remove('hidden');
+            } else if (figure === 'cuadrado' || figure === 'rectangulo') {
+                document.getElementById('squareRectFields').classList.remove('hidden');
+            } else if (figure === 'linea_recta') {
+                document.getElementById('lineFields').classList.remove('hidden');
+            }
+        });
+
+        polarBtn.addEventListener('click', function() {
+            document.getElementById('coordinateSystem').value = 'polar';
+            polarBtn.classList.add('active');
+            cartesianBtn.classList.remove('active');
+        });
+
+        cartesianBtn.addEventListener('click', function() {
+            document.getElementById('coordinateSystem').value = 'cartesiana';
+            cartesianBtn.classList.add('active');
+            polarBtn.classList.remove('active');
+        });
+
+        function convertToPixels(value, unit) {
+            if (unit === 'mm') {
+                return value / 10; // Convertir mm a px
+            }
+            return value * 10; // Convertir cm a px
+        }
+
+        function drawCartesianPlane() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const step = 50;
+            ctx.strokeStyle = '#ddd';
+
+            ctx.beginPath();
+            for (let x = 0; x <= width; x += step) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+            }
+            for (let y = 0; y <= height; y += step) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+            }
+            ctx.stroke();
+
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(width / 2, 0);
+            ctx.lineTo(width / 2, height);
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+        }
+
+        document.getElementById('drawButton').addEventListener('click', function() {
+            const figure = figureSelect.value;
+            const coordinateSystem = document.getElementById('coordinateSystem').value;
+            const unit = unitSelect.value;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCartesianPlane();
+
+            const unitConversion = convertToPixels(1, unit);
+
+            if (figure === 'circulo') {
+                const radius = parseFloat(document.getElementById('radius').value) * unitConversion;
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+            } else if (figure === 'triangulo') {
+                const triangleType = document.getElementById('triangleType').value;
+                ctx.beginPath();
+                if (triangleType === 'equilatero') {
+                    ctx.moveTo(canvas.width / 2, canvas.height / 2 - 100);
+                    ctx.lineTo(canvas.width / 2 - 100, canvas.height / 2 + 100);
+                    ctx.lineTo(canvas.width / 2 + 100, canvas.height / 2 + 100);
+                } else if (triangleType === 'isosceles') {
+                    ctx.moveTo(canvas.width / 2, canvas.height / 2 - 100);
+                    ctx.lineTo(canvas.width / 2 - 100, canvas.height / 2 + 100);
+                    ctx.lineTo(canvas.width / 2 + 100, canvas.height / 2 + 100);
+                } else if (triangleType === 'escaleno') {
+                    ctx.moveTo(canvas.width / 2, canvas.height / 2 - 100);
+                    ctx.lineTo(canvas.width / 2 - 120, canvas.height / 2 + 100);
+                    ctx.lineTo(canvas.width / 2 + 80, canvas.height / 2 + 100);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            } else if (figure === 'cuadrado' || figure === 'rectangulo') {
+                const sideLength = parseFloat(document.getElementById('sideLength').value) * unitConversion;
+                ctx.beginPath();
+                ctx.rect(canvas.width / 2 - sideLength / 2, canvas.height / 2 - sideLength / 2, sideLength, sideLength);
+                ctx.stroke();
+            } else if (figure === 'linea_recta') {
+                const coordinates = document.getElementById('coordinates').value.split(',').map(Number);
+                if (coordinates.length === 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(coordinates[0] + canvas.width / 2, coordinates[1] + canvas.height / 2);
+                    ctx.lineTo(coordinates[2] + canvas.width / 2, coordinates[3] + canvas.height / 2);
+                    ctx.stroke();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
