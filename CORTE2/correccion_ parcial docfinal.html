@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dibujo de Figuras en Coordenadas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+        }
+        .figureInputs, .inputs {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Dibujo de Figuras en Coordenadas</h1>
+        <form id="coordForm">
+            <fieldset>
+                <legend>Selecciona el tipo de coordenadas</legend>
+                <label>
+                    <input type="radio" name="coordType" value="cartesiana" checked> Cartesianas
+                </label>
+                <label>
+                    <input type="radio" name="coordType" value="polar"> Polares
+                </label>
+            </fieldset>
+            <div id="cartesianaInputs" class="inputs">
+                <h2>Coordenadas Cartesianas</h2>
+                <label for="x">Introduce la coordenada x:</label>
+                <input type="number" id="x" name="x" step="any">
+                <br>
+                <label for="y">Introduce la coordenada y:</label>
+                <input type="number" id="y" name="y" step="any">
+            </div>
+            <div id="polarInputs" class="inputs" style="display:none;">
+                <h2>Coordenadas Polares</h2>
+                <label for="radio">Introduce el radio:</label>
+                <input type="number" id="radio" name="radio" step="any">
+                <br>
+                <label for="angulo">Introduce el ángulo en grados:</label>
+                <input type="number" id="angulo" name="angulo" step="any">
+            </div>
+            <div class="figureInputs">
+                <label for="lados">Número de lados del polígono:</label>
+                <input type="number" id="lados" name="lados" min="3" step="1">
+                <br>
+                <label>
+                    <input type="radio" name="constructionMethod" value="lados" checked> Por número de lados
+                </label>
+                <label>
+                    <input type="radio" name="constructionMethod" value="apotema"> Por apotema
+                </label>
+            </div>
+            <div id="apotemaInputs" class="figureInputs" style="display:none;">
+                <label for="apotema">Introduce el apotema del polígono:</label>
+                <input type="number" id="apotema" name="apotema" step="any">
+            </div>
+            <button type="button" id="dibujarFiguraBtn">Dibujar Figura</button>
+        </form>
+        <div id="result" class="result"></div>
+        <canvas id="planeCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <script>
+        class FiguraDibujadora {
+            constructor(ctx) {
+                this.ctx = ctx;
+                this.chart = null;
+            }
+
+            // Configura el gráfico en el plano
+            configurarGrafico(datos, label) {
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+
+                this.chart = new Chart(this.ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: label,
+                            data: datos,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            showLine: true
+                        }],
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom'
+                            },
+                            y: {
+                                type: 'linear',
+                                position: 'left'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Función para manejar la visibilidad de los campos del formulario
+            static manejarCambioDeCoordenadas() {
+                document.querySelectorAll('input[name="coordType"]').forEach(input => {
+                    input.addEventListener('change', function() {
+                        document.getElementById('cartesianaInputs').style.display = this.value === 'cartesiana' ? 'block' : 'none';
+                        document.getElementById('polarInputs').style.display = this.value === 'polar' ? 'block' : 'none';
+                    });
+                });
+
+                document.querySelectorAll('input[name="constructionMethod"]').forEach(input => {
+                    input.addEventListener('change', function() {
+                        document.getElementById('apotemaInputs').style.display = this.value === 'apotema' ? 'block' : 'none';
+                    });
+                });
+            }
+
+            // Función principal para dibujar la figura en función del tipo de coordenadas
+            dibujarFigura() {
+                const coordType = document.querySelector('input[name="coordType"]:checked').value;
+                const method = document.querySelector('input[name="constructionMethod"]:checked').value;
+                const lados = parseInt(document.getElementById('lados').value);
+                if (isNaN(lados) || lados < 3) {
+                    alert('El número de lados debe ser un entero mayor o igual a 3.');
+                    return;
+                }
+
+                if (coordType === 'cartesiana') {
+                    const x = parseFloat(document.getElementById('x').value) || 0;
+                    const y = parseFloat(document.getElementById('y').value) || 0;
+
+                    if (method === 'lados') {
+                        this.dibujarPoligonoCartesiano(lados, x, y);
+                    } else {
+                        const apotema = parseFloat(document.getElementById('apotema').value) || 0;
+                        if (isNaN(apotema) || apotema <= 0) {
+                            alert('El apotema debe ser un número válido y mayor que cero.');
+                            return;
+                        }
+                        this.dibujarPoligonoCartesianoPorApotema(lados, x, y, apotema);
+                    }
+                } else {
+                    const radio = parseFloat(document.getElementById('radio').value) || 0;
+                    const anguloGrados = parseFloat(document.getElementById('angulo').value) || 0;
+
+                    if (method === 'lados') {
+                        this.dibujarPoligonoPolar(lados, radio, anguloGrados);
+                    } else {
+                        const apotema = parseFloat(document.getElementById('apotema').value) || 0;
+                        if (isNaN(apotema) || apotema <= 0) {
+                            alert('El apotema debe ser un número válido y mayor que cero.');
+                            return;
+                        }
+                        this.dibujarPoligonoPolarPorApotema(lados, radio, anguloGrados, apotema);
+                    }
+                }
+            }
+
+            // Función para dibujar el polígono en coordenadas cartesianas
+            dibujarPoligonoCartesiano(lados, xCentro, yCentro) {
+                const datos = [];
+                const radio = 5; // Radio arbitrario para la figura
+                for (let i = 0; i < lados; i++) {
+                    const angulo = (2 * Math.PI / lados) * i;
+                    datos.push({ x: xCentro + radio * Math.cos(angulo), y: yCentro + radio * Math.sin(angulo) });
+                }
+                datos.push(datos[0]); // Cerrar el polígono
+
+                this.configurarGrafico(datos, `Polígono con ${lados} lados`);
+            }
+
+            // Función para dibujar el polígono en coordenadas cartesianas con apotema
+            dibujarPoligonoCartesianoPorApotema(lados, xCentro, yCentro, apotema) {
+                const datos = [];
+                const angulo = 2 * Math.PI / lados;
+                const radio = apotema / Math.cos(angulo / 2); // Cálculo del radio basado en apotema
+
+                for (let i = 0; i < lados; i++) {
+                    const anguloActual = angulo * i;
+                    datos.push({ x: xCentro + radio * Math.cos(anguloActual), y: yCentro + radio * Math.sin(anguloActual) });
+                }
+                datos.push(datos[0]); // Cerrar el polígono
+
+                this.configurarGrafico(datos, `Polígono con ${lados} lados (Por apotema)`);
+            }
+
+            // Función para dibujar el polígono en coordenadas polares
+            dibujarPoligonoPolar(lados, radio, anguloGrados) {
+                const datos = [];
+                const anguloRad = anguloGrados * (Math.PI / 180); // Convertir a radianes
+
+                for (let i = 0; i < lados; i++) {
+                    const angulo = (2 * Math.PI / lados) * i + anguloRad;
+                    datos.push({ x: radio * Math.cos(angulo), y: radio * Math.sin(angulo) });
+                }
+                datos.push(datos[0]); // Cerrar el polígono
+
+                this.configurarGrafico(datos, `Polígono con ${lados} lados`);
+            }
+
+            // Función para dibujar el polígono en coordenadas polares con apotema
+            dibujarPoligonoPolarPorApotema(lados, radio, anguloGrados, apotema) {
+                const datos = [];
+                const anguloRad = anguloGrados * (Math.PI / 180); // Convertir a radianes
+                const radioCalculado = apotema / Math.cos(Math.PI / lados); // Calcular el radio basado en apotema
+
+                for (let i = 0; i < lados; i++) {
+                    const angulo = (2 * Math.PI / lados) * i + anguloRad;
+                    datos.push({ x: radioCalculado * Math.cos(angulo), y: radioCalculado * Math.sin(angulo) });
+                }
+                datos.push(datos[0]); // Cerrar el polígono
+
+                this.configurarGrafico(datos, `Polígono con ${lados} lados (Por apotema)`);
+            }
+        }
+
+        const ctx = document.getElementById('planeCanvas').getContext('2d');
+        const figuraDibujadora = new FiguraDibujadora(ctx);
+
+        // Configurar el manejador de eventos
+        FiguraDibujadora.manejarCambioDeCoordenadas();
+
+        // Añadir el manejador de eventos al botón "Dibujar Figura"
+        document.getElementById('dibujarFiguraBtn').addEventListener('click', () => {
+            figuraDibujadora.dibujarFigura();
+        });
+
+        // Inicialmente dibuja la figura si hay valores predeterminados
+        figuraDibujadora.dibujarFigura();
+    </script>
+</body>
+</html>
