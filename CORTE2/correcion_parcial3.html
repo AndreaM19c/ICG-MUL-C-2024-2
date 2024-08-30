@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversión de Coordenadas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+        }
+        .figureInputs {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Dibujo de Figuras en Coordenadas</h1>
+        <form id="coordForm">
+            <fieldset>
+                <legend>Selecciona el tipo de coordenadas</legend>
+                <label>
+                    <input type="radio" name="coordType" value="cartesiana" checked> Cartesianas
+                </label>
+                <label>
+                    <input type="radio" name="coordType" value="polar"> Polares
+                </label>
+            </fieldset>
+            <div id="cartesianaInputs" class="inputs">
+                <h2>Coordenadas Cartesianas</h2>
+                <label for="x">Introduce la coordenada x:</label>
+                <input type="number" id="x" name="x" step="any" oninput="dibujarFigura()">
+                <br>
+                <label for="y">Introduce la coordenada y:</label>
+                <input type="number" id="y" name="y" step="any" oninput="dibujarFigura()">
+            </div>
+            <div id="polarInputs" class="inputs" style="display:none;">
+                <h2>Coordenadas Polares</h2>
+                <label for="radio">Introduce el radio:</label>
+                <input type="number" id="radio" name="radio" step="any" oninput="dibujarFigura()">
+                <br>
+                <label for="angulo">Introduce el ángulo en grados:</label>
+                <input type="number" id="angulo" name="angulo" step="any" oninput="dibujarFigura()">
+            </div>
+            <div class="figureInputs">
+                <label for="lados">Número de lados del polígono:</label>
+                <input type="number" id="lados" name="lados" min="3" step="1" oninput="dibujarFigura()">
+            </div>
+        </form>
+        <div id="result" class="result"></div>
+        <canvas id="planeCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('planeCanvas').getContext('2d');
+        let chart = null;
+
+        // Función para manejar la visibilidad de los campos del formulario
+        document.querySelectorAll('input[name="coordType"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'cartesiana') {
+                    document.getElementById('cartesianaInputs').style.display = 'block';
+                    document.getElementById('polarInputs').style.display = 'none';
+                    dibujarFigura(); // Dibuja el plano cartesiano
+                } else {
+                    document.getElementById('cartesianaInputs').style.display = 'none';
+                    document.getElementById('polarInputs').style.display = 'block';
+                    dibujarFigura(); // Dibuja el plano polar
+                }
+            });
+        });
+
+        function dibujarFigura() {
+            const coordType = document.querySelector('input[name="coordType"]:checked').value;
+            const lados = parseInt(document.getElementById('lados').value);
+
+            if (isNaN(lados) || lados < 3) {
+                alert('El número de lados debe ser un entero mayor o igual a 3.');
+                return;
+            }
+
+            if (coordType === 'cartesiana') {
+                const x = parseFloat(document.getElementById('x').value) || 0;
+                const y = parseFloat(document.getElementById('y').value) || 0;
+
+                dibujarPoligonoCartesiano(lados, x, y);
+            } else {
+                const radio = parseFloat(document.getElementById('radio').value) || 0;
+                const anguloGrados = parseFloat(document.getElementById('angulo').value) || 0;
+
+                dibujarPoligonoPolar(lados, radio, anguloGrados);
+            }
+        }
+
+        function dibujarPoligonoCartesiano(lados, xCentro, yCentro) {
+            if (chart) {
+                chart.destroy();
+            }
+
+            const datos = [];
+            const radio = 5; // Radio arbitrario para la figura
+            for (let i = 0; i < lados; i++) {
+                const angulo = (2 * Math.PI / lados) * i;
+                datos.push({ x: xCentro + radio * Math.cos(angulo), y: yCentro + radio * Math.sin(angulo) });
+            }
+            datos.push(datos[0]); // Cerrar el polígono
+
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: `Polígono con ${lados} lados`,
+                        data: datos,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        showLine: true
+                    }],
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function dibujarPoligonoPolar(lados, radio, anguloGrados) {
+            if (chart) {
+                chart.destroy();
+            }
+
+            const datos = [];
+            const angulos = [];
+            for (let i = 0; i < lados; i++) {
+                const angulo = (360 / lados) * i;
+                angulos.push(angulo);
+                datos.push(radio);
+            }
+
+            chart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: angulos.map((a) => `Ángulo ${a}`),
+                    datasets: [{
+                        label: `Polígono con ${lados} lados`,
+                        data: datos,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                    }],
+                },
+                options: {
+                    scales: {
+                        r: {
+                            min: 0,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Inicialmente dibuja el plano cartesiano
+        dibujarFigura();
+    </script>
+</body>
+</html>
