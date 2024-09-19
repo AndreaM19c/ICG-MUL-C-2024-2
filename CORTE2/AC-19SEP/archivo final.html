@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primitivas de Graficación en SVG</title>
+    <style>
+        svg {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svgCanvas" width="500" height="500">
+        <!-- Las figuras se agregarán aquí -->
+    </svg>
+    <script>
+        class Figura {
+            constructor(svg) {
+                this.svg = svg;
+                this.strokeStyle = 'black';
+                this.lineWidth = 2;
+            }
+
+            setEstilo(strokeStyle, lineWidth) {
+                this.strokeStyle = strokeStyle;
+                this.lineWidth = lineWidth;
+            }
+
+            dibujar() {
+                // Método vacío para ser sobreescrito
+            }
+        }
+
+        class Linea extends Figura {
+            constructor(svg, x1, y1, x2, y2) {
+                super(svg);
+                this.x1 = x1;
+                this.y1 = y1;
+                this.x2 = x2;
+                this.y2 = y2;
+            }
+
+            dibujar() {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', this.x1);
+                line.setAttribute('y1', this.y1);
+                line.setAttribute('x2', this.x2);
+                line.setAttribute('y2', this.y2);
+                line.setAttribute('stroke', this.strokeStyle);
+                line.setAttribute('stroke-width', this.lineWidth);
+                this.svg.appendChild(line);
+            }
+        }
+
+        class Circunferencia extends Figura {
+            constructor(svg, cx, cy, r) {
+                super(svg);
+                this.cx = cx;
+                this.cy = cy;
+                this.r = r;
+            }
+
+            dibujar() {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', this.cx);
+                circle.setAttribute('cy', this.cy);
+                circle.setAttribute('r', this.r);
+                circle.setAttribute('stroke', this.strokeStyle);
+                circle.setAttribute('stroke-width', this.lineWidth);
+                circle.setAttribute('fill', 'none'); // Sin relleno
+                this.svg.appendChild(circle);
+            }
+        }
+
+        class Elipse extends Figura {
+            constructor(svg, cx, cy, a, b) {
+                super(svg);
+                this.cx = cx;
+                this.cy = cy;
+                this.a = a;
+                this.b = b;
+            }
+
+            dibujar() {
+                const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                ellipse.setAttribute('cx', this.cx);
+                ellipse.setAttribute('cy', this.cy);
+                ellipse.setAttribute('rx', this.a);
+                ellipse.setAttribute('ry', this.b);
+                ellipse.setAttribute('stroke', this.strokeStyle);
+                ellipse.setAttribute('stroke-width', this.lineWidth);
+                ellipse.setAttribute('fill', 'none'); // Sin relleno
+                this.svg.appendChild(ellipse);
+            }
+        }
+
+        // Inicializar el SVG
+        const svgCanvas = document.getElementById('svgCanvas');
+
+        // Crear las figuras
+        const figuras = [
+            new Linea(svgCanvas, 50, 50, 200, 200),
+            new Circunferencia(svgCanvas, 300, 100, 50),
+            new Elipse(svgCanvas, 400, 300, 80, 50)
+        ];
+
+        // Configurar estilo de dibujo
+        figuras.forEach(figura => {
+            figura.setEstilo('black', 2); // Estilo común para todas
+            figura.dibujar();
+        });
+    </script>
+</body>
+</html>
