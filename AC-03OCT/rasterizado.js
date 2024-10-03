@@ -1,16 +1,19 @@
 // Clase Punto para encapsular coordenadas
 class Punto {
+    #x;
+    #y;
+
     constructor(x, y) {
-        this._x = x;
-        this._y = y;
+        this.#x = x;
+        this.#y = y;
     }
 
     get x() {
-        return this._x;
+        return this.#x;
     }
 
     get y() {
-        return this._y;
+        return this.#y;
     }
 }
 
@@ -51,7 +54,7 @@ function sortPoints(points) {
     });
 }
 
-// Dibuja la figura en un canvas
+// Dibuja la figura en un canvas y devuelve la imagen rasterizada
 function drawShape(sortedPoints) {
     const canvas = document.createElement('canvas');
     canvas.width = 600;
@@ -84,7 +87,7 @@ function init() {
     generateRandomPoints(); // Generar puntos
     const sortedPoints = sortPoints(points); // Ordenar puntos
     const rasterizedImage = drawShape(sortedPoints); // Dibujar y rasterizar figura
-    
+
     // Mostrar resultados
     document.getElementById('rasterizedImage').src = rasterizedImage;
     const resultText = isConvex ? "La figura es convexa." : "La figura es cóncava.";
