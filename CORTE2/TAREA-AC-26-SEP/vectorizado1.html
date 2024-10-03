@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primitivas de Graficación en SVG</title>
+    <style>
+        svg {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svgCanvas" width="500" height="500">
+        <!-- Las figuras se agregarán aquí -->
+    </svg>
+    <script>
+        class Figura {
+            constructor(svg) {
+                this.svg = svg;
+                this.strokeStyle = 'black';
+                this.lineWidth = 2;
+            }
+
+            setEstilo(strokeStyle, lineWidth) {
+                this.strokeStyle = strokeStyle;
+                this.lineWidth = lineWidth;
+            }
+        }
+
+        // Inicializar el SVG
+        const svgCanvas = document.getElementById('svgCanvas');
+    </script>
+</body>
+</html>
