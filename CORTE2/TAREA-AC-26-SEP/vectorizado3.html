@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primitivas de Graficación en SVG</title>
+    <style>
+        svg {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svgCanvas" width="500" height="500">
+        <!-- Las figuras se agregarán aquí -->
+    </svg>
+    <script>
+        class Figura {
+            constructor(svg) {
+                this.svg = svg;
+                this.strokeStyle = 'black';
+                this.lineWidth = 2;
+            }
+
+            setEstilo(strokeStyle, lineWidth) {
+                this.strokeStyle = strokeStyle;
+                this.lineWidth = lineWidth;
+            }
+        }
+
+        class Punto {
+            #x;
+            #y;
+
+            constructor(x, y) {
+                this.#x = x;
+                this.#y = y;
+            }
+
+            getX() {
+                return this.#x;
+            }
+
+            getY() {
+                return this.#y;
+            }
+
+            setPunto(x, y) {
+                this.#x = x;
+                this.#y = y;
+            }
+        }
+
+        class Linea extends Figura {
+            constructor(svg, punto1, punto2) {
+                super(svg);
+                this.punto1 = punto1;
+                this.punto2 = punto2;
+            }
+
+            dibujar() {
+                this.bresenham(
+                    this.punto1.getX(),
+                    this.punto1.getY(),
+                    this.punto2.getX(),
+                    this.punto2.getY()
+                );
+            }
+
+            bresenham(x1, y1, x2, y2) {
+                let dx = Math.abs(x2 - x1);
+                let dy = Math.abs(y2 - y1);
+                let sx = (x1 < x2) ? 1 : -1;
+                let sy = (y1 < y2) ? 1 : -1;
+                let err = dx - dy;
+
+                while (true) {
+                    this.dibujarPixel(x1, y1);
+
+                    if (x1 === x2 && y1 === y2) break;
+
+                    let e2 = 2 * err;
+                    if (e2 > -dy) {
+                        err -= dy;
+                        x1 += sx;
+                    }
+                    if (e2 < dx) {
+                        err += dx;
+                        y1 += sy;
+                    }
+                }
+            }
+
+            dibujarPixel(x, y) {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', this.lineWidth);
+                rect.setAttribute('height', this.lineWidth);
+                rect.setAttribute('fill', this.strokeStyle);
+                this.svg.appendChild(rect);
+            }
+        }
+
+        // Inicializar el SVG
+        const svgCanvas = document.getElementById('svgCanvas');
+
+        // Crear puntos y línea
+        const punto1 = new Punto(50, 50);
+        const punto2 = new Punto(200, 200);
+        const linea = new Linea(svgCanvas, punto1, punto2);
+
+        // Dibujar la línea
+        linea.setEstilo('black', 2);
+        linea.dibujar();
+    </script>
+</body>
+</html>
