@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primitivas de Graficación en SVG</title>
+    <style>
+        svg {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <svg id="svgCanvas" width="500" height="500">
+        <!-- Las figuras se agregarán aquí -->
+    </svg>
+    <script>
+        class Figura {
+            constructor(svg) {
+                this.svg = svg;
+                this.strokeStyle = 'black';
+                this.lineWidth = 2;
+            }
+
+            setEstilo(strokeStyle, lineWidth) {
+                this.strokeStyle = strokeStyle;
+                this.lineWidth = lineWidth;
+            }
+        }
+
+        class Punto {
+            #x;
+            #y;
+
+            constructor(x, y) {
+                this.#x = x;
+                this.#y = y;
+            }
+
+            getX() {
+                return this.#x;
+            }
+
+            getY() {
+                return this.#y;
+            }
+
+            setPunto(x, y) {
+                this.#x = x;
+                this.#y = y;
+            }
+        }
+
+        // Inicializar el SVG
+        const svgCanvas = document.getElementById('svgCanvas');
+
+        // Crear puntos
+        const punto1 = new Punto(50, 50);
+        const punto2 = new Punto(200, 200);
+    </script>
+</body>
+</html>
